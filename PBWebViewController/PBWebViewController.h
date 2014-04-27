@@ -16,6 +16,11 @@
 @interface PBWebViewController : UIViewController <UIWebViewDelegate>
 
 /**
+ * The HTML that will be loaded by the web view controller.
+ */
+@property (strong, nonatomic) NSString *HTML;
+
+/**
  * The URL that will be loaded by the web view controller.
  * If there is one present when the web view appears, it will be automatically loaded, by calling `load`,
  * Otherwise, you can set a `URL` after the web view has already been loaded and then manually call `load`.
@@ -43,6 +48,12 @@
  * otehrwise it can be called manually.
  */
 - (void)load;
+
+/**
+ * Loads the given `HTML`. This is called automatically when the when the web view appears if a `HTML` exists,
+ * otehrwise it can be called manually.
+ */
+- (void)loadFromHTML;
 
 /**
  * Clears the contents of the web view.

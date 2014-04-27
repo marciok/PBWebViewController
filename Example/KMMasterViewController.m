@@ -76,14 +76,25 @@
     }
     
     PBSafariActivity *activity = [[PBSafariActivity alloc] init];
-    self.webViewController.URL = [NSURL URLWithString:bookmark];
+    
+    if (indexPath.row == 1) {
+        self.webViewController.HTML = @"<h1>Shalom <a href='http://google.com'>click here</a></h1>";
+    }
+    else {
+        self.webViewController.URL = [NSURL URLWithString:bookmark];
+    }
+
     self.webViewController.applicationActivities = @[activity];
     self.webViewController.excludedActivityTypes = @[UIActivityTypeMail, UIActivityTypeMessage, UIActivityTypePostToWeibo];
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         [self.navigationController pushViewController:self.webViewController animated:YES];
     } else {
-        [self.webViewController load];
+        if (indexPath.row == 1) {
+            [self.webViewController loadFromHTML];
+        } else {
+            [self.webViewController load];
+        }
     }
 }
 

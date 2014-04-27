@@ -16,6 +16,7 @@
 @property (strong, nonatomic) UIBarButtonItem *reloadButton;
 @property (strong, nonatomic) UIBarButtonItem *backButton;
 @property (strong, nonatomic) UIBarButtonItem *forwardButton;
+@property (strong, nonatomic) UIBarButtonItem *actionButton;
 
 @property (strong, nonatomic) UIPopoverController *activitiyPopoverController;
 
@@ -38,7 +39,23 @@
 {
     NSURLRequest *request = [NSURLRequest requestWithURL:self.URL];
     [self.webView loadRequest:request];
+    self.reloadButton.enabled = YES;
+    self.actionButton.enabled = YES;
     
+    [self displayToolbar];
+}
+
+- (void)loadFromHTML
+{
+    [self.webView loadHTMLString:self.HTML baseURL:nil];
+    self.reloadButton.enabled = NO;
+    self.actionButton.enabled = NO;
+    
+    [self displayToolbar];
+}
+
+- (void)displayToolbar
+{
     if (self.navigationController.toolbarHidden) {
         self.toolbarPreviouslyHidden = YES;
         if (self.showsNavigationToolbar) {
@@ -51,6 +68,7 @@
 {
     [self.webView loadHTMLString:@"" baseURL:nil];
     self.title = @"";
+    self.URL = nil;
 }
 
 #pragma mark - View controller lifecycle
@@ -75,6 +93,10 @@
     if (self.URL) {
         [self load];
     }
+    else if (self.HTML) {
+        [self loadFromHTML];
+    }
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -82,6 +104,7 @@
     [super viewWillDisappear:animated];
     [self.webView stopLoading];
     self.webView.delegate = nil;
+    [self clear];
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     
     if (self.toolbarPreviouslyHidden && self.showsNavigationToolbar) {
@@ -167,7 +190,7 @@
     self.backButton.enabled = NO;
     self.forwardButton.enabled = NO;
     
-    UIBarButtonItem *actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
+    self.actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
                                                                                   target:self
                                                                                   action:@selector(action:)];
     
@@ -180,15 +203,15 @@
                                                                             action:nil];
     space_.width = 60.0f;
     
-    self.toolbarItems = @[self.stopLoadingButton, space, self.backButton, space_, self.forwardButton, space, actionButton];
+    self.toolbarItems = @[self.stopLoadingButton, space, self.backButton, space_, self.forwardButton, space, self.actionButton];
 }
 
 - (void)toggleState
 {
     self.backButton.enabled = self.webView.canGoBack;
     self.forwardButton.enabled = self.webView.canGoForward;
-    
     NSMutableArray *toolbarItems = [self.toolbarItems mutableCopy];
+    
     if (self.webView.loading) {
         toolbarItems[0] = self.stopLoadingButton;
     } else {
@@ -249,7 +272,13 @@
 {
     [self finishLoad];
     self.title = [webView stringByEvaluatingJavaScriptFromString:@"document.title"];
-    self.URL = self.webView.request.URL;
+    NSURL *currentURL = self.webView.request.URL;
+    if (![[currentURL absoluteString] isEqualToString:@"about:blank"]) {
+        self.URL = self.webView.request.URL;
+        self.reloadButton.enabled = YES;
+        self.actionButton.enabled = YES;
+    }
+
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
